@@ -25,8 +25,10 @@ namespace Bot_Application1
                 // calculate something for us to return
                 int length = (activity.Text ?? string.Empty).Length;
 
-                // return our reply to the user
-                Activity reply = activity.CreateReply($"I couldn't agree more!");
+                // return a random statement of agreement to the user
+                string[] statements = new[] { "I agree with you 100 percent.", "I couldn't agree with you more.", "I'm with you on this one!", "That's so true!", "For sure!", "Tell me about it!", "You're absolutely right.", "That's exactly how I feel.", "No doubt about it.", "You have a point there.", "I was just going to say that!", "You are so right.", "I couldn't have said it better myself."};
+                var rand = new Random();
+                Activity reply = activity.CreateReply($"{rand.Next(statements.Count())}");
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
             else
