@@ -13,21 +13,41 @@ namespace Bot_Application1
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+        // Only instantiate a random object once
+        private Random _rand { get; set; }
+        public Random rand
+        {
+            get
+            {
+                if (_rand == null)
+                {
+                    _rand = new Random();
+                }
+                return _rand;
+            }
+        }
+
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            if (activity.Type == ActivityTypes.Message)
+            if (activity.Type == ActivityTypes.Message &&
+                activity.Text.ToLower().Contains("yesbot") ||
+                activity.Text.ToLower().Contains("agreed?") ||
+                activity.Text.ToLower().Contains("agree?") ||
+                activity.Text.ToLower().Contains("yes?") ||
+                activity.Text.ToLower().Contains("think?") ||
+                activity.Text.ToLower().Contains("do you agree") ||
+                activity.Text.ToLower().Contains("what do you think")
+                )
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                // calculate something for us to return
-                int length = (activity.Text ?? string.Empty).Length;
+                // random statements of agreement to return
+                string[] statements = new[] { "I agree with you 100 percent.", "I couldn't agree with you more.", "I'm with you on this one!", "That's so true!", "For sure!", "Tell me about it!", "You're absolutely right.", "That's exactly how I feel.", "No doubt about it.", "You have a point there.", "I was just going to say that!", "You are so right.", "I couldn't have said it better myself." };
 
-                // return a random statement of agreement to the user
-                string[] statements = new[] { "I agree with you 100 percent.", "I couldn't agree with you more.", "I'm with you on this one!", "That's so true!", "For sure!", "Tell me about it!", "You're absolutely right.", "That's exactly how I feel.", "No doubt about it.", "You have a point there.", "I was just going to say that!", "You are so right.", "I couldn't have said it better myself."};
-                var rand = new Random();
+                // return a random statement to the user
                 Activity reply = activity.CreateReply($"{statements[rand.Next(statements.Length)]}");
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
