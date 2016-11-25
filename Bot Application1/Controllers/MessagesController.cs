@@ -8,7 +8,7 @@ using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 
-namespace Bot_Application1
+namespace YesBot
 {
     [BotAuthentication]
     public class MessagesController : ApiController
@@ -33,23 +33,32 @@ namespace Bot_Application1
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            if (activity.Type == ActivityTypes.Message &&
-                activity.Text.ToLower().Contains("yesbot") ||
-                activity.Text.ToLower().Contains("agreed?") ||
-                activity.Text.ToLower().Contains("agree?") ||
-                activity.Text.ToLower().Contains("yes?") ||
-                activity.Text.ToLower().Contains("think?") ||
-                activity.Text.ToLower().Contains("do you agree") ||
-                activity.Text.ToLower().Contains("what do you think")
-                )
+            if (activity.Type == ActivityTypes.Message)
             {
-                ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                // random statements of agreement to return
-                string[] statements = new[] { "I agree with you 100 percent.", "I couldn't agree with you more.", "I'm with you on this one!", "That's so true!", "For sure!", "Tell me about it!", "You're absolutely right.", "That's exactly how I feel.", "No doubt about it.", "You have a point there.", "I was just going to say that!", "You are so right.", "I couldn't have said it better myself." };
+                // Request intent and entities from LUIS
+                LUISResponse luis = await LUISFactory.GetIntentFromLUIS(activity.Text);
 
-                // return a random statement to the user
-                Activity reply = activity.CreateReply($"{statements[rand.Next(statements.Length)]}");
-                await connector.Conversations.ReplyToActivityAsync(reply);
+                // Manual calculation is LUIS caps out
+                if (luis.intents.Count() == 0 && (
+                    activity.Text.ToLower().Contains("yesbot") ||
+                    activity.Text.ToLower().Contains("agreed?") ||
+                    activity.Text.ToLower().Contains("agree?") ||
+                    activity.Text.ToLower().Contains("yes?") ||
+                    activity.Text.ToLower().Contains("think?") ||
+                    activity.Text.ToLower().Contains("do you agree") ||
+                    activity.Text.ToLower().Contains("what do you think")) ||
+                    // Or if LUIS decides to trigger agreement
+                    luis.intents[0].intent == "RequestAgreement"
+                    )
+                {
+                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    // random statements of agreement to return
+                    string[] statements = new[] { "I agree with you 100 percent.", "I couldn't agree with you more.", "I'm with you on this one!", "That's so true!", "For sure!", "Tell me about it!", "You're absolutely right.", "That's exactly how I feel.", "No doubt about it.", "You have a point there.", "I was just going to say that!", "You are so right.", "I couldn't have said it better myself." };
+
+                    // return a random statement to the user
+                    Activity reply = activity.CreateReply($"{statements[rand.Next(statements.Length)]}");
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+                }
             }
             else
             {
