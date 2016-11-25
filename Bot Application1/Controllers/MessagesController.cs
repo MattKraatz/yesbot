@@ -33,7 +33,7 @@ namespace YesBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            if (activity.Type == ActivityTypes.Message)
+            if (activity.Type == ActivityTypes.Message && activity.Text.Length > 0)
             {
                 // Request intent and entities from LUIS
                 LUISResponse luis = await LUISFactory.GetIntentFromLUIS(activity.Text);
